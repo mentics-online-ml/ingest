@@ -1,0 +1,28 @@
+[package]
+name = "ingest"
+version = "0.1.0"
+edition = "2021"
+
+#[profile.dev]
+## Must always use panic = "abort" to avoid needing to define the unstable eh_personality lang item.
+#panic = "abort"
+#
+#[profile.release]
+#opt-level = "z"     # Optimize for size.
+#lto = true          # Enable Link Time Optimization
+#codegen-units = 1   # Reduce number of codegen units to increase optimizations.
+#panic = "abort"     # Abort on panic
+#strip = true        # Automatically strip symbols from the binary.
+
+[dependencies]
+tokio = { version = "1.37.0", features = ["macros", "rt", "rt-multi-thread", "time"] }
+chrono = "0.4.37"
+libc = { version = "0.2", default-features = false }
+#redpanda = { version = "0.5.0", default-features = false }
+rdkafka = { default-features = false, features = ["tokio"] }
+rust-tradier = { git = "https://github.com/mentics/rust-tradier.git", branch = "main" }
+# tokio = { version = "1.18", features = ["rt", "time"], optional = true }
+
+#[dev-dependencies]
+#async-std = { version = "1.9.0", features = ["attributes"] }
+#tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread", "time"] }

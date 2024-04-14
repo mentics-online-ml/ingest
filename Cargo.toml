@@ -15,7 +15,7 @@ edition = "2021"
 #strip = true        # Automatically strip symbols from the binary.
 
 [dependencies]
-tokio = { version = "1.37.0", features = ["macros", "rt", "rt-multi-thread", "time"] }
+tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread", "time"] }
 chrono = "0.4.37"
 libc = { version = "0.2", default-features = false }
 #redpanda = { version = "0.5.0", default-features = false }

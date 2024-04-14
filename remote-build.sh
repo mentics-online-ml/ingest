@@ -22,3 +22,17 @@ fi
 kubectl exec rust-dev -i -- bash < test-script.sh
 
 kubectl delete pod rust-dev
+
+
+
+
+
+
+
+apt-get update
+apt-get install vim
+apt-get install iproute2 # for ss command
+
+
+
+~/rpk -X brokers=redpanda-0.redpanda.rpanda.svc.cluster.local.:9093 -X tls.enabled=true -X tls.insecure_skip_verify=true topic list

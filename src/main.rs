@@ -21,45 +21,65 @@ impl Handler<String> for Test {
 
 #[tokio::main]
 async fn main() {
-    println!("Begin");
+    const topic:&str = "spy";
+    const brokers:&str = "redpanda-0.redpanda.rpanda.svc.cluster.local.:9093";
 
-    let brokers = "localhost:9093";
-    let topic = "test-topic";
+    println!("Reading from tradier and writing to redpanda topic {topic}");
 
-    let producer: FutureProducer = ClientConfig::new()
-        .set("bootstrap.servers", brokers)
-        .set("message.timeout.ms", "5000")
-        .create()
-        .expect("Producer creation error");
+    // ~/rpk -X brokers=redpanda-0.redpanda.rpanda.svc.cluster.local.:9093 -X tls.enabled=true -X tls.insecure_skip_verify=true topic list
+    // redpanda-0.redpanda.rpanda.svc.cluster.local
+
+    struct MyHandler {
+        msg_counter:u64,
+        producer:FutureProducer
+    }
+    impl MyHandler {
+        fn new() -> Self {
+            let producer: FutureProducer = ClientConfig::new()
+                .set("bootstrap.servers", brokers)
+                .set("message.timeout.ms", "5000")
+                .create()
+                .expect("Producer creation error");
+            Self { msg_counter:0, producer }
+        }
+    }
+    impl Handler<String> for MyHandler {
+        fn on_data(&mut self, timestamp:NaiveDateTime, data:String) {
+            self.msg_counter += 1;
+            let rec = FutureRecord::to("spy")
+                .key("blue")
+                .payload(&data);
+                // .timestamp(now());
+            self.producer.send_result(rec).expect("send_result expect 1");
+                // .await
+                // .unwrap()
+                // .unwrap();
+
+            // println!("MyHandler::on_data received: {:?}", data);
+        }
+    }
+
+    let h = MyHandler::new();
+
+    // let h = Test { data: "none yet".to_string() };
+    start(h);
+    std::thread::sleep(std::time::Duration::from_secs(4));
 
 
-    let consumer: StreamConsumer = ClientConfig::new()
-        .set("bootstrap.servers", brokers)
-        .set("session.timeout.ms", "6000")
-        .set("enable.auto.commit", "false")
-        .set("group.id", "rust-rdkafka-roundtrip-example")
-        .create()
-        .expect("Consumer creation failed");
+    // let consumer: StreamConsumer = ClientConfig::new()
+    //     .set("bootstrap.servers", brokers)
+    //     .set("session.timeout.ms", "6000")
+    //     .set("enable.auto.commit", "false")
+    //     .set("group.id", "rust-rdkafka-roundtrip-example")
+    //     .create()
+    //     .expect("Consumer creation failed");
 
-    consumer.subscribe(&[&topic]).unwrap();
-
-    producer
-        .send_result(
-            FutureRecord::to(&topic)
-                .key(&1.to_string())
-                .payload("dummy")
-                // .timestamp(now()),
-        )
-        .unwrap()
-        .await
-        .unwrap()
-        .unwrap();
+    // consumer.subscribe(&[&topic])
+    //     .expect("Can't subscribe to specified topic");
 
 
-
-    let message = consumer.recv().await.unwrap();
-    print!("Consumed: {:?}", message);
-
+    // let message = consumer.recv().await.unwrap();
+    // print!("Consumed: {:?}", message);
 
 
     // let producer = RedpandaBuilder::new()
@@ -71,8 +91,5 @@ async fn main() {
     // producer.send_result(&rec).unwrap();
     // producer.send("test", "test message from rust".to_string()).unwrap();
 
-    // let h = Test { data: "none yet".to_string() };
-    // start(h);
-    // std::thread::sleep(std::time::Duration::from_secs(4));
-    // println!("End");
+    println!("End");
 }

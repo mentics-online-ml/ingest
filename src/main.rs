@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use rust_tradier::data::{Handler, start};
+use rust_tradier::data::{Handler, run_async};
 // use redpanda::{builder::RedpandaBuilder, producer::RedpandaRecord};
 
 use rdkafka::config::ClientConfig;
@@ -62,9 +62,7 @@ async fn main() {
     let h = MyHandler::new();
 
     // let h = Test { data: "none yet".to_string() };
-    start(h);
-    std::thread::sleep(std::time::Duration::from_secs(4));
-
+    run_async(h).await;
 
     // let consumer: StreamConsumer = ClientConfig::new()
     //     .set("bootstrap.servers", brokers)

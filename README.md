@@ -1,3 +1,5 @@
+Anytime a git repo is changed, you'll need to update the dependency for it by running:
+cargo update -p rust-tradier
 
 When trying to use in Cargo.toml:
 reqwest = { version = "0.12.2", features = ["native-tls-vendored"] }

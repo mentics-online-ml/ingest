@@ -1,5 +1,6 @@
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/mentics-ml-demo/ingest"
 
-COPY target/x86_64-unknown-linux-musl/release/ingest /
+COPY target/release/ingest /
 
 CMD ["/ingest"]

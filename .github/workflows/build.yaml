@@ -8,7 +8,7 @@ on:
 
 jobs:
       push-store-image:
-        runs-on: rust-dev2
+        runs-on: [linux, ARM64]
         steps:
           - name: 'Checkout GitHub Action'
             uses: actions/checkout@main

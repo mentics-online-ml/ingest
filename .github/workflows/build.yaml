@@ -7,8 +7,13 @@ on:
   workflow_dispatch:
 
 jobs:
-      push-store-image:
+      build-and-push-image:
         runs-on: [self-hosted, rust]
+
+        permissions:
+          contents: read
+          packages: write
+
         steps:
           - name: "Check some things"
             run: echo "$PATH"

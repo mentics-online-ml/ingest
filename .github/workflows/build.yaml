@@ -8,8 +8,11 @@ on:
 
 jobs:
       push-store-image:
-        runs-on: [rust, linux, ARM64]
+        runs-on: [rust, Linux, ARM64]
         steps:
+          - name: "Check some things"
+            run: echo "$PATH"
+
           - name: 'Checkout GitHub Action'
             uses: actions/checkout@main
 

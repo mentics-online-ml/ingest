@@ -16,13 +16,18 @@ jobs:
 
         steps:
           - name: "Check some things"
-            run: echo "$PATH"
+            run: echo "PATH: $PATH"
+            run: echo "RUSTC_WRAPPER: $RUSTC_WRAPPER"
 
           - name: 'Checkout GitHub Action'
             uses: actions/checkout@main
 
           - name: 'Build with cargo'
+            run: echo "PATH: $PATH"
+            run: echo "RUSTC_WRAPPER: $RUSTC_WRAPPER"
+            run: sccache --show-stats
             run: cargo build --release
+            run: sccache --show-stats
 
           - name: 'Login to GitHub Container Registry'
             uses: docker/login-action@v1

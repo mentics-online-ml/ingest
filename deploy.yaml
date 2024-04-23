@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ingress
+spec:
+  containers:
+  - name: ingress
+    image: ghcr.io/mentics-ml-demo/ingest:latest

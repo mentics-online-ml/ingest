@@ -8,6 +8,6 @@
 #         -Z unstable-options \
 #         --out-dir target
 
-RUSTFLAGS='-C link-arg=-s' cargo build --release --target x86_64-unknown-linux-musl
+RUSTFLAGS='-C link-arg=-s' cargo build --release --target aarch64-unknown-linux-musl
 
-docker build -t mentics/ingest:latest .
+docker build -t ghcr.io/mentics-ml-demo/ingest:latest .

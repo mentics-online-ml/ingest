@@ -7,31 +7,31 @@ on:
   workflow_dispatch:
 
 jobs:
-      build-and-push-image:
-        runs-on: [self-hosted, rust]
+  build-and-push-image:
+    runs-on: [self-hosted, rust]
 
-        permissions:
-          contents: read
-          packages: write
+    permissions:
+      contents: read
+      packages: write
 
-        steps:
-          - name: "Check some things"
-            run: echo "$PATH"
+    steps:
+    - name: "Check some things"
+      run: echo "$PATH"
 
-          - name: 'Checkout GitHub Action'
-            uses: actions/checkout@main
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@main
 
-          - name: 'Build with cargo'
-            run: cargo build --release
+    - name: 'Build with cargo'
+      run: RUSTFLAGS='-C link-arg=-s' cargo build --release --target aarch64-unknown-linux-musl
 
-          - name: 'Login to GitHub Container Registry'
-            uses: docker/login-action@v1
-            with:
-              registry: ghcr.io
-              username: ${{github.actor}}
-              password: ${{secrets.GITHUB_TOKEN}}
+    - name: 'Login to GitHub Container Registry'
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{github.actor}}
+        password: ${{secrets.GITHUB_TOKEN}}
 
-          - name: 'Build and publish image'
-            run: |
-              docker build . --tag ghcr.io/mentics-ml-demo/ingest:latest
-              docker push ghcr.io/mentics-ml-demo/ingest:latest
+    - name: 'Build and publish image'
+      run: |
+        docker build . --tag ghcr.io/mentics-ml-demo/ingest:latest
+        docker push ghcr.io/mentics-ml-demo/ingest:latest

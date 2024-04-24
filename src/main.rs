@@ -70,7 +70,7 @@ async fn main() {
     let h = MyHandler::new(brokers, topic_raw, topic_features);
 
     // let h = Test { data: "none yet".to_string() };
-    run_async(h).await;
+    run_async(h, "SPY").await;
 
     // let consumer: StreamConsumer = ClientConfig::new()
     //     .set("bootstrap.servers", brokers)

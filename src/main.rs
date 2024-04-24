@@ -1,5 +1,6 @@
 use std::env;
 use chrono::NaiveDateTime;
+use rdkafka::message::{Header, OwnedHeaders};
 use rust_tradier::data::{Handler, run_async};
 // use redpanda::{builder::RedpandaBuilder, producer::RedpandaRecord};
 
@@ -41,9 +42,12 @@ impl MyHandler {
 impl Handler<String> for MyHandler {
     fn on_data(&mut self, timestamp:NaiveDateTime, data:String) {
         self.msg_counter += 1;
+        let headers = OwnedHeaders::new()
+            .insert(Header { key: "counter", value: Some(&self.msg_counter.to_string()) });
         let rec = FutureRecord::to(&self.topic_raw)
             .key("blue")
-            .timestamp(timestamp)
+            .timestamp(timestamp.timestamp_millis())
+            .headers(headers)
             .payload(&data);
             // .timestamp(now());
         self.producer.send_result(rec).expect("send_result expect 1");

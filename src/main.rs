@@ -1,10 +1,11 @@
+use std::env;
 use chrono::NaiveDateTime;
 use rust_tradier::data::{Handler, run_async};
 // use redpanda::{builder::RedpandaBuilder, producer::RedpandaRecord};
 
 use rdkafka::config::ClientConfig;
-use rdkafka::consumer::{Consumer, StreamConsumer};
-use rdkafka::message::Message;
+// use rdkafka::consumer::{Consumer, StreamConsumer};
+// use rdkafka::message::Message;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 
 
@@ -19,47 +20,50 @@ impl Handler<String> for Test {
     }
 }
 
+struct MyHandler {
+    msg_counter:u64,
+    topic_raw:String,
+    topic_features:String,
+    producer:FutureProducer
+}
+
+impl MyHandler {
+    fn new(brokers:String, topic_raw:String, topic_features:String) -> Self {
+        let producer: FutureProducer = ClientConfig::new()
+            .set("bootstrap.servers", &brokers)
+            .set("message.timeout.ms", "5000")
+            .create()
+            .expect("Producer creation error");
+        Self { msg_counter:0, producer, topic_raw, topic_features }
+    }
+}
+
+impl Handler<String> for MyHandler {
+    fn on_data(&mut self, timestamp:NaiveDateTime, data:String) {
+        self.msg_counter += 1;
+        let rec = FutureRecord::to(&self.topic_raw)
+            .key("blue")
+            .timestamp(timestamp)
+            .payload(&data);
+            // .timestamp(now());
+        self.producer.send_result(rec).expect("send_result expect 1");
+            // .await
+            // .unwrap()
+            // .unwrap();
+
+        // println!("MyHandler::on_data received: {:?}", data);
+    }
+}
+
 #[tokio::main]
 async fn main() {
-    const topic:&str = "spy";
-    const brokers:&str = "redpanda-0.redpanda.rpanda.svc.cluster.local.:9093";
+    let topic_raw:String = env::var("TOPIC_RAW").unwrap();
+    let topic_features:String = env::var("TOPIC_FEATURES").unwrap();
+    let brokers:String = env::var("REDPANDA_ENDPOINT").unwrap();
 
-    println!("Reading from tradier and writing to redpanda topic {topic}");
+    println!("Reading from tradier and writing to redpanda topic {topic_raw}");
 
-    // ~/rpk -X brokers=redpanda-0.redpanda.rpanda.svc.cluster.local.:9093 -X tls.enabled=true -X tls.insecure_skip_verify=true topic list
-    // redpanda-0.redpanda.rpanda.svc.cluster.local
-
-    struct MyHandler {
-        msg_counter:u64,
-        producer:FutureProducer
-    }
-    impl MyHandler {
-        fn new() -> Self {
-            let producer: FutureProducer = ClientConfig::new()
-                .set("bootstrap.servers", brokers)
-                .set("message.timeout.ms", "5000")
-                .create()
-                .expect("Producer creation error");
-            Self { msg_counter:0, producer }
-        }
-    }
-    impl Handler<String> for MyHandler {
-        fn on_data(&mut self, timestamp:NaiveDateTime, data:String) {
-            self.msg_counter += 1;
-            let rec = FutureRecord::to("spy")
-                .key("blue")
-                .payload(&data);
-                // .timestamp(now());
-            self.producer.send_result(rec).expect("send_result expect 1");
-                // .await
-                // .unwrap()
-                // .unwrap();
-
-            // println!("MyHandler::on_data received: {:?}", data);
-        }
-    }
-
-    let h = MyHandler::new();
+    let h = MyHandler::new(brokers, topic_raw, topic_features);
 
     // let h = Test { data: "none yet".to_string() };
     run_async(h).await;

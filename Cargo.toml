@@ -18,11 +18,8 @@ edition = "2021"
 tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread", "time"] }
 chrono = "0.4.37"
 libc = { version = "0.2", default-features = false }
-#redpanda = { version = "0.5.0", default-features = false }
 rdkafka = { version = "0.36.2", default-features = false, features = ["tokio", "cmake-build"] }
 rust-tradier = { git = "https://github.com/mentics/rust-tradier.git", branch = "main" }
+# convert = { git = "https://github.com/mentics-ml-demo/predict.git", branch = "main" }
+convert = { path = "/home/jshellman/dev/ml-demo/convert" }
 # tokio = { version = "1.18", features = ["rt", "time"], optional = true }
-
-#[dev-dependencies]
-#async-std = { version = "1.9.0", features = ["attributes"] }
-#tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread", "time"] }

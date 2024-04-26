@@ -1,3 +1,6 @@
+local dir holds scripts to run dependent components for local testing.
+
+
 Anytime a dependent git repo is changed, you'll need to update the dependency for it by running:
 cargo update -p rust-tradier
 

@@ -1,4 +1,5 @@
 version: "3.7"
+# From: https://docs.redpanda.com/current/get-started/quick-start/
 name: redpanda-quickstart-one-broker
 networks:
   redpanda_network:

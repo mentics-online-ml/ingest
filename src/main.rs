@@ -2,7 +2,7 @@ use anyhow::bail;
 use chrono::NaiveDateTime;
 use rust_tradier::data::{run_async, Handler};
 use series_store::{SeriesReader, SeriesWriter};
-use shared_types::{EventId, Features};
+use shared_types::{Event, EventId, Logger, StdoutLogger};
 
 
 const SYMBOL: &str = "SPY";
@@ -27,14 +27,14 @@ impl Handler<String> for TradierHandler {
         let event_id = self.next_event_id;
         println!("event id: {}, thread id: {:?}", event_id, std::thread::current());
 
-        let features = Features::try_from(event_id, &data);
+        let event = Event::try_from(event_id, &data);
         // TODO: handle error case properly
         // TODO: check for different types like quote
-        if features.is_err() {
+        if event.is_err() {
             println!("Skipping message: {}", data);
             return;
         }
-        let features = features.unwrap();
+        let event = event.unwrap();
 
         // TODO: better error handling
         match self.writer.write_raw(
@@ -51,15 +51,15 @@ impl Handler<String> for TradierHandler {
         }
 
         // TODO: better error handling
-        match self.writer.write_features(
+        match self.writer.write_event(
             SYMBOL,
             event_id,
             timestamp.timestamp_millis(),
-            &features,
+            &event,
         ) {
             Ok(_) => (),
             Err(e) => {
-                println!("Error writing features to store: {:?}", e);
+                println!("Error writing event to store: {:?}", e);
                 return;
             }
         }
@@ -70,7 +70,8 @@ impl Handler<String> for TradierHandler {
 
 #[tokio::main]
 async fn main() {
-    let starting_counter = initial_counter().unwrap();
+    let logger = StdoutLogger::boxed();
+    let starting_counter = initial_counter(logger).unwrap();
 
     println!("Reading from tradier and writing to series-store");
     let h = TradierHandler::new(starting_counter);
@@ -79,8 +80,8 @@ async fn main() {
     println!("Exiting");
 }
 
-fn initial_counter() -> anyhow::Result<u64> {
-    let reader = SeriesReader::new()?;
+fn initial_counter(logger: Box<dyn Logger>) -> anyhow::Result<u64> {
+    let reader = SeriesReader::new(logger)?;
     let ids = reader.try_most_recent_event_ids()?;
     println!("High watermarks {:?}", ids);
 

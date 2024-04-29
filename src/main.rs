@@ -1,8 +1,7 @@
 use anyhow::bail;
-use chrono::NaiveDateTime;
 use rust_tradier::data::{run_async, Handler};
 use series_store::{SeriesReader, SeriesWriter};
-use shared_types::{Event, EventId, Logger, StdoutLogger};
+use shared_types::{convert::serialize_timestamp, Event, EventId, Logger, StdoutLogger, UtcDateTime};
 
 
 const SYMBOL: &str = "SPY";
@@ -23,7 +22,7 @@ impl TradierHandler {
 }
 
 impl Handler<String> for TradierHandler {
-    fn on_data(&mut self, timestamp: NaiveDateTime, data: String) {
+    fn on_data(&mut self, timestamp: UtcDateTime, data: String) {
         let event_id = self.next_event_id;
         println!("event id: {}, thread id: {:?}", event_id, std::thread::current());
 
@@ -40,7 +39,7 @@ impl Handler<String> for TradierHandler {
         match self.writer.write_raw(
             SYMBOL,
             event_id,
-            timestamp.timestamp_millis(),
+            serialize_timestamp(timestamp),
             &data,
         ) {
             Ok(_) => (),
@@ -54,7 +53,7 @@ impl Handler<String> for TradierHandler {
         match self.writer.write_event(
             SYMBOL,
             event_id,
-            timestamp.timestamp_millis(),
+            serialize_timestamp(timestamp),
             &event,
         ) {
             Ok(_) => (),

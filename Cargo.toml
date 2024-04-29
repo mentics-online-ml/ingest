@@ -15,8 +15,9 @@ edition = "2021"
 #strip = true        # Automatically strip symbols from the binary.
 
 [dependencies]
-tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread", "time"] }
+anyhow = "1.0.82"
 chrono = "0.4.37"
+tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread", "time"] }
 libc = { version = "0.2", default-features = false }
 rdkafka = { version = "0.36.2", default-features = false, features = ["tokio", "cmake-build"] }
 rust-tradier = { git = "https://github.com/mentics/rust-tradier.git", branch = "main" }
@@ -26,5 +27,4 @@ rust-tradier = { git = "https://github.com/mentics/rust-tradier.git", branch = "
 shared-types = { path = "/home/jshellman/dev/ml-demo/shared-types" }
 # series-store = { git = "https://github.com/mentics-ml-demo/series-store.git", branch = "main" }
 series-store = { path = "/home/jshellman/dev/ml-demo/series-store" }
-anyhow = "1.0.82"
 

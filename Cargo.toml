@@ -24,7 +24,7 @@ rust-tradier = { git = "https://github.com/mentics/rust-tradier.git", branch = "
 # tokio = { version = "1.18", features = ["rt", "time"], optional = true }
 
 # shared-types = { git = "https://github.com/mentics-ml-demo/shared-types.git", branch = "main" }
-shared-types = { path = "/home/jshellman/dev/ml-demo/shared-types" }
+shared-types = { path = "../shared-types" }
 # series-store = { git = "https://github.com/mentics-ml-demo/series-store.git", branch = "main" }
-series-store = { path = "/home/jshellman/dev/ml-demo/series-store" }
+series-store = { path = "../series-store" }
 

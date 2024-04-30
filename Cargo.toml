@@ -23,8 +23,8 @@ rdkafka = { version = "0.36.2", default-features = false, features = ["tokio", "
 rust-tradier = { git = "https://github.com/mentics/rust-tradier.git", branch = "main" }
 # tokio = { version = "1.18", features = ["rt", "time"], optional = true }
 
-# shared-types = { git = "https://github.com/mentics-ml-demo/shared-types.git", branch = "main" }
+# shared-types = { git = "https://github.com/mentics-online-ml/shared-types.git", branch = "main" }
 shared-types = { path = "../shared-types" }
-# series-store = { git = "https://github.com/mentics-ml-demo/series-store.git", branch = "main" }
+# series-store = { git = "https://github.com/mentics-online-ml/series-store.git", branch = "main" }
 series-store = { path = "../series-store" }
 

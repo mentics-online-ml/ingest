@@ -10,4 +10,4 @@
 
 RUSTFLAGS='-C link-arg=-s' cargo build --release --target aarch64-unknown-linux-musl
 
-docker build -t ghcr.io/mentics-ml-demo/ingest:latest .
+docker build -t ghcr.io/mentics-online-ml/ingest:latest .

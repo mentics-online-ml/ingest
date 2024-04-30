@@ -36,5 +36,5 @@ jobs:
 
     - name: 'Build and publish image'
       run: |
-        docker build . --tag ghcr.io/mentics-ml-demo/ingest:latest
-        docker push ghcr.io/mentics-ml-demo/ingest:latest
+        docker build . --tag ghcr.io/mentics-online-ml/ingest:latest
+        docker push ghcr.io/mentics-online-ml/ingest:latest

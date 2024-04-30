@@ -2,13 +2,13 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: ingest
-  namespace: ml-demo
+  namespace: online-ml
 spec:
   containers:
   - name: ingest
-    image: ghcr.io/mentics-ml-demo/ingest:latest
+    image: ghcr.io/mentics-online-ml/ingest:latest
     envFrom:
     - configMapRef:
-        name: ml-demo-config
+        name: online-ml-config
     - secretRef:
-        name: ml-demo-secrets
+        name: online-ml-secrets

@@ -1,92 +1,103 @@
-use anyhow::bail;
+use std::collections::HashMap;
+
+use anyhow::Context;
 use rust_tradier::data::{run_async, Handler};
-use series_store::{SeriesReader, SeriesWriter};
-use shared_types::{convert::serialize_timestamp, Event, EventId, Logger, StdoutLogger, UtcDateTime};
+use series_store::{expected_topics, SeriesReader, SeriesWriter, Topic};
+use shared_types::{convert::serialize_timestamp, EventId, StdoutLogger, UtcDateTime};
 
-
-const SYMBOL: &str = "SPY";
+use serde_json::{self, Value};
 
 struct TradierHandler {
-    next_event_id: EventId,
+    next_event_ids: HashMap<Topic, EventId>,
     writer: SeriesWriter,
 }
 
 impl TradierHandler {
-    fn new(starting_counter: u64) -> Self {
+    fn new(next_event_ids: HashMap<Topic, EventId>) -> Self {
         let writer: SeriesWriter = SeriesWriter::new();
         Self {
-            next_event_id: starting_counter,
+            next_event_ids,
             writer,
         }
+    }
+
+    fn sendit(&mut self, timestamp: &UtcDateTime, data: &str) -> anyhow::Result<()> {
+        // println!("event id: {}, thread id: {:?}", event_id, std::thread::current());
+
+        let v: Value = serde_json::from_str::<Value>(data)?;
+        let event_type = v["type"].as_str().with_context(|| format!("Could not get event type from event: {}", data))?;
+        let symbol = v["symbol"].as_str().with_context(|| format!("Could not get symbol from event: {}", data))?;
+        let ts = serialize_timestamp(timestamp);
+        let topic = Topic::new("raw", symbol, event_type);
+
+        let event_id = *self.next_event_ids.get(&topic).unwrap_or_else(|| {
+            println!("WARNING: event_id not found for topic: {}", topic);
+            // TODO: go get latest for this topic?
+            &1
+        });
+        self.writer.write(event_id, &topic, "key", ts, data).with_context(|| "Error writing to store")?;
+
+        self.next_event_ids.insert(topic, event_id + 1);
+        Ok(())
     }
 }
 
 impl Handler<String> for TradierHandler {
     fn on_data(&mut self, timestamp: UtcDateTime, data: String) {
-        let event_id = self.next_event_id;
-        println!("event id: {}, thread id: {:?}", event_id, std::thread::current());
+        let _ = self.sendit(&timestamp, &data).map_err(|e| {
+            println!("{}: Error {} processing event: {}", timestamp, e, data);
+        });
 
-        let event = Event::try_from(event_id, &data);
-        // TODO: handle error case properly
-        // TODO: check for different types like quote
-        if event.is_err() {
-            println!("Skipping message: {}", data);
-            return;
-        }
-        let event = event.unwrap();
+        // let event = Event::try_from(event_id, &data);
+        // // TODO: handle error case properly
+        // // TODO: check for different types like quote
+        // if event.is_err() {
+        //     println!("Skipping message: {}", data);
+        //     return;
+        // }
+        // let event = event.unwrap();
 
-        // TODO: better error handling
-        match self.writer.write_raw(
-            SYMBOL,
-            event_id,
-            serialize_timestamp(timestamp),
-            &data,
-        ) {
-            Ok(_) => (),
-            Err(e) => {
-                println!("Error writing raw to store: {:?}", e);
-                return;
-            }
-        }
+        // // TODO: better error handling
+        // match self.writer.write_raw(
+        //     SYMBOL,
+        //     event_id,
+        //     serialize_timestamp(timestamp),
+        //     &data,
+        // ) {
+        //     Ok(_) => (),
+        //     Err(e) => {
+        //         println!("Error writing raw to store: {:?}", e);
+        //         return;
+        //     }
+        // }
 
-        // TODO: better error handling
-        match self.writer.write_event(
-            SYMBOL,
-            event_id,
-            serialize_timestamp(timestamp),
-            &event,
-        ) {
-            Ok(_) => (),
-            Err(e) => {
-                println!("Error writing event to store: {:?}", e);
-                return;
-            }
-        }
+        // // TODO: better error handling
+        // match self.writer.write_event(
+        //     SYMBOL,
+        //     event_id,
+        //     serialize_timestamp(timestamp),
+        //     &event,
+        // ) {
+        //     Ok(_) => (),
+        //     Err(e) => {
+        //         println!("Error writing event to store: {:?}", e);
+        //         return;
+        //     }
+        // }
 
-        self.next_event_id = event_id + 1;
     }
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     let logger = StdoutLogger::boxed();
-    let starting_counter = initial_counter(logger).unwrap();
+    let mut reader = SeriesReader::new(logger)?;
+    let next_event_ids = reader.calc_next_event_ids()?;
 
     println!("Reading from tradier and writing to series-store");
-    let h = TradierHandler::new(starting_counter);
-    run_async(h, SYMBOL).await;
+    let h = TradierHandler::new(next_event_ids);
+    run_async(h, &series_store::SYMBOLS).await;
 
     println!("Exiting");
-}
-
-fn initial_counter(logger: Box<dyn Logger>) -> anyhow::Result<u64> {
-    let reader = SeriesReader::new(logger)?;
-    let ids = reader.try_most_recent_event_ids()?;
-    println!("High watermarks {:?}", ids);
-
-    if ids.raw == ids.event {
-        Ok(ids.raw)
-    } else {
-        bail!("Unhandled id mismatch {} != {}", ids.raw, ids.event)
-    }
+    Ok(())
 }

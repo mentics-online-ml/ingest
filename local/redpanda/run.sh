@@ -5,4 +5,4 @@ cd "$(dirname "${BASH_SOURCE[0]}")" || exit
 
 docker compose up -d
 # TODO: wait for docker containers to be ready
-docker exec -it redpanda-0 rpk topic create raw event label
+# docker exec -it redpanda-0 rpk topic create raw event label

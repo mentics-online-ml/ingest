@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 use rust_tradier::data::{run_async, Handler};
-use series_store::{expected_topics, SeriesReader, SeriesWriter, Topic};
+use series_store::{SeriesReader, SeriesWriter, Topic};
 use shared_types::{convert::serialize_timestamp, EventId, StdoutLogger, UtcDateTime};
 
 use serde_json::{self, Value};
@@ -21,7 +21,7 @@ impl TradierHandler {
         }
     }
 
-    fn sendit(&mut self, timestamp: &UtcDateTime, data: &str) -> anyhow::Result<()> {
+    async fn sendit(&mut self, timestamp: &UtcDateTime, data: &str) -> anyhow::Result<()> {
         // println!("event id: {}, thread id: {:?}", event_id, std::thread::current());
 
         let v: Value = serde_json::from_str::<Value>(data)?;
@@ -35,7 +35,7 @@ impl TradierHandler {
             // TODO: go get latest for this topic?
             &1
         });
-        self.writer.write(event_id, &topic, "key", ts, data).with_context(|| "Error writing to store")?;
+        self.writer.write(event_id, &topic, "key", ts, data).await.with_context(|| "Error writing to store")?;
 
         self.next_event_ids.insert(topic, event_id + 1);
         Ok(())
@@ -43,48 +43,10 @@ impl TradierHandler {
 }
 
 impl Handler<String> for TradierHandler {
-    fn on_data(&mut self, timestamp: UtcDateTime, data: String) {
-        let _ = self.sendit(&timestamp, &data).map_err(|e| {
+    async fn on_data_async(&mut self, timestamp: UtcDateTime, data: String) {
+        let _ = self.sendit(&timestamp, &data).await.map_err(|e| {
             println!("{}: Error {} processing event: {}", timestamp, e, data);
         });
-
-        // let event = Event::try_from(event_id, &data);
-        // // TODO: handle error case properly
-        // // TODO: check for different types like quote
-        // if event.is_err() {
-        //     println!("Skipping message: {}", data);
-        //     return;
-        // }
-        // let event = event.unwrap();
-
-        // // TODO: better error handling
-        // match self.writer.write_raw(
-        //     SYMBOL,
-        //     event_id,
-        //     serialize_timestamp(timestamp),
-        //     &data,
-        // ) {
-        //     Ok(_) => (),
-        //     Err(e) => {
-        //         println!("Error writing raw to store: {:?}", e);
-        //         return;
-        //     }
-        // }
-
-        // // TODO: better error handling
-        // match self.writer.write_event(
-        //     SYMBOL,
-        //     event_id,
-        //     serialize_timestamp(timestamp),
-        //     &event,
-        // ) {
-        //     Ok(_) => (),
-        //     Err(e) => {
-        //         println!("Error writing event to store: {:?}", e);
-        //         return;
-        //     }
-        // }
-
     }
 }
 

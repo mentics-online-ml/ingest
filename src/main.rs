@@ -14,7 +14,7 @@ struct TradierHandler {
 
 impl TradierHandler {
     fn new(next_event_ids: HashMap<Topic, EventId>) -> Self {
-        let writer: SeriesWriter = SeriesWriter::new();
+        let writer: SeriesWriter = SeriesWriter::default();
         Self {
             next_event_ids,
             writer,
@@ -53,7 +53,7 @@ impl Handler<String> for TradierHandler {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let logger = StdoutLogger::boxed();
-    let mut reader = SeriesReader::new(logger)?;
+    let mut reader = SeriesReader::new(logger, "ingest")?;
     let next_event_ids = reader.calc_next_event_ids()?;
 
     println!("Reading from tradier and writing to series-store");

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Context;
 use rust_tradier::data::{run_async, Handler};
 use series_store::{SeriesReader, SeriesWriter, Topic};
-use shared_types::{convert::serialize_timestamp, EventId, StdoutLogger, UtcDateTime};
+use shared_types::{convert::serialize_timestamp, EventId, UtcDateTime};
 
 use serde_json::{self, Value};
 
@@ -52,8 +52,7 @@ impl Handler<String> for TradierHandler {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let logger = StdoutLogger::boxed();
-    let mut reader = SeriesReader::new(logger, "ingest")?;
+    let mut reader = SeriesReader::new("ingest")?;
     let next_event_ids = reader.calc_next_event_ids()?;
 
     println!("Reading from tradier and writing to series-store");

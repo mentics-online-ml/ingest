@@ -53,6 +53,7 @@ impl Handler<String> for TradierHandler {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let mut reader = SeriesReader::new("ingest")?;
+    println!("Getting next event ids");
     let next_event_ids = reader.calc_next_event_ids()?;
 
     println!("Reading from tradier and writing to series-store");
